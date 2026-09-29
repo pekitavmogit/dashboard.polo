@@ -17,7 +17,7 @@ window.POLO_CONFIG = {
   supportServer: "https://discord.gg/J3fK3mHA9p",
   docsUrl: "https://polo.gg/docs",
   voteUrl: "",
-  apiUrl: "http://38.60.209.215:50005/"
+  apiUrl: "http://localhost:3000"
 };
 
 window.PoloLinks = {
