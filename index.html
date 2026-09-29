@@ -6,7 +6,7 @@
 <title>PoLo — Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=13" />
+<link rel="stylesheet" href="style.css?v=14" />
 <link rel="icon" href="logo.png" type="image/png">
 </head>
 <body>
@@ -50,7 +50,6 @@
   <nav class="nav" id="mainNav">
     <button class="active" data-view="overview">Resumen</button>
     <button data-view="servers">Servidores <em id="navServerCount">6</em></button>
-    <button data-view="moderation">Moderacion</button>
     <button data-view="guild">Servidor</button>
     <button data-view="help">Ayuda</button>
     <button data-view="reports">Reportes</button>
@@ -161,28 +160,6 @@
       <span class="tag" id="loginTag">sin sesion</span>
     </div>
     <div class="server-grid" id="serverGrid"></div>
-  </section>
-
-  <section class="view" id="view-moderation">
-    <div class="page-head"><div><h2>Moderacion</h2><p class="muted">Acciones rapidas y cola de reportes.</p></div></div>
-    <div class="grid2">
-      <div class="card">
-        <h3>Sancionar usuario</h3>
-        <form class="form" id="modForm">
-          <label>Usuario<input class="input" id="modUser" placeholder="@usuario" required /></label>
-          <div class="row2">
-            <label>Accion<select class="input" id="modAction"><option value="warn">Warn</option><option value="mute">Timeout 10m</option><option value="kick">Kick</option><option value="ban">Ban</option></select></label>
-            <label>Servidor<select class="input" id="modServer"></select></label>
-          </div>
-          <label>Motivo<input class="input" id="modReason" placeholder="spam, insultos..." /></label>
-          <button class="btn-primary" type="submit">Aplicar sancion</button>
-        </form>
-      </div>
-      <div class="card">
-        <div class="card-head"><h3>Cola de reportes <span class="tag" id="repCount">4 pendientes</span></h3></div>
-        <div class="feed" id="reports"></div>
-      </div>
-    </div>
   </section>
 
   <section class="view" id="view-guild">
@@ -321,13 +298,17 @@
   </section>
 
   <section class="view" id="view-reports">
-    <div class="page-head"><div><h2>Reportar bug</h2><p class="muted">Llega al canal de reportes y al owner por MD, igual que /report.</p></div></div>
+    <div class="page-head"><div><h2>Reportar bug</h2><p class="muted">Llega al canal de reportes, igual que /report.</p></div></div>
     <form class="card form" id="bugForm" style="max-width:560px">
       <label>Bug<input class="input" id="bugText" placeholder="Describe el bug..." required /></label>
       <label>Severidad<select class="input" id="bugSev"><option value="minor">Menor</option><option value="severe">Grave</option><option value="unknown">No se</option></select></label>
       <label>Nota extra<input class="input" id="bugNote" placeholder="opcional" /></label>
       <button class="btn-primary" type="submit">Enviar reporte</button>
     </form>
+    <div class="card hidden" id="staffQueue" style="max-width:560px;margin-top:14px">
+      <div class="card-head"><h3>Cola de reportes <span class="tag" id="repCount">0 pendientes</span></h3><span class="tag green">STAFF</span></div>
+      <div class="feed" id="reports"></div>
+    </div>
   </section>
 
   <section class="view" id="view-settings">
@@ -389,7 +370,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="config.js?v=13"></script>
-<script src="app.js?v=13"></script>
+<script src="config.js?v=14"></script>
+<script src="app.js?v=14"></script>
 </body>
 </html>
