@@ -129,6 +129,7 @@ function doLogout() {
   renderHero();
   showNoGuild();
   paintPremiumLock();
+  $('#staffQueue').classList.add('hidden');
   toast('Sesion cerrada');
 }
 async function handleOAuthCallback() {
@@ -264,7 +265,6 @@ function renderServers(filter = '') {
   });
   if (!S.servers.length) {
     $('#serverGrid').innerHTML = '<p class="muted">Sin datos. Pulsa Sincronizar.</p>';
-    $('#modServer').innerHTML = '';
     return;
   }
   $('#serverGrid').innerHTML = list.map(s => `
@@ -284,7 +284,6 @@ function renderServers(filter = '') {
       <div class="s-actions"><button class="btn-primary" onclick="inviteTo('${s.id}')">Anadir PoLo</button></div>
     </div>`).join('');
   }
-  $('#modServer').innerHTML = S.servers.filter(s => s.hasPolo).map(s => `<option value="${s.id}">${s.name}</option>`).join('');
   $$('#serverGrid [data-manage]').forEach(b => b.onclick = () => selectGuild(b.dataset.manage, true));
 }
 
@@ -311,6 +310,10 @@ async function refreshMe() {
     ME = { isOwner: !!j.isOwner, isPremium: !!j.isPremium, id: j.id };
   } catch { ME = { isOwner: false, isPremium: false, id: null }; }
   paintPremiumLock();
+  try {
+    const s = await apiGet('/api/staff');
+    $('#staffQueue').classList.toggle('hidden', !s.isStaff);
+  } catch { $('#staffQueue').classList.add('hidden'); }
 }
 
 // ---------- MODULOS: hub estilo Koya + detalle ----------
@@ -612,23 +615,6 @@ function renderReports(items) {
   $('#reports').innerHTML = items.map(r => `<div class="feed-item"><span class="tag">REPORT</span><span><b>${r.user}</b> - ${r.reason}<br><small style="color:#949ba4">${r.guild} - ${r.severity}</small></span></div>`).join('');
   $('#repCount').textContent = items.length + ' pendientes';
 }
-$('#modForm').addEventListener('submit', async e => {
-  e.preventDefault();
-  const payload = {
-    user: $('#modUser').value,
-    action: $('#modAction').value,
-    guildId: $('#modServer').value,
-    reason: $('#modReason').value || 'sin motivo'
-  };
-  try {
-    await apiPost('/api/moderation', payload);
-    log('warn', `MOD: ${payload.action} a ${payload.user} - ${payload.reason}`);
-    toast('Sancion enviada al bot');
-  } catch {
-    toast('Sin conexion al bot');
-  }
-  e.target.reset();
-});
 
 // ---------- SETTINGS ----------
 function loadSettings() {
