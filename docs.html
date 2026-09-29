@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PoLo — Documentación</title>
+<link rel="stylesheet" href="style.css?v=13" />
+<link rel="icon" href="logo.png" type="image/png">
+<style>
+.doc{max-width:860px;margin:0 auto;padding:28px 20px 60px}
+.doc img.doc-logo{width:84px;height:84px;border-radius:22px;border:1px solid var(--line)}
+.doc h1{font-size:32px;margin:14px 0}
+.doc h2{font-size:22px;margin:28px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.doc h3{font-size:17px;margin:20px 0 8px}
+.doc p,.doc li{font-size:14px;line-height:1.7;color:var(--txt)}
+.doc ul{padding-left:22px}
+.doc blockquote{border-left:4px solid var(--accent);background:var(--panel);border-radius:0 12px 12px 0;padding:10px 14px;margin:12px 0;color:var(--muted)}
+.doc code{font-family:'JetBrains Mono',monospace;font-size:12.5px;background:#1e1f22;padding:2px 7px;border-radius:7px;color:#fff}
+.doc pre{background:#1e1f22;border:1px solid var(--line);border-radius:12px;padding:14px;overflow:auto}
+.doc pre code{background:none;padding:0}
+.doc hr{border:0;border-top:1px solid var(--line);margin:24px 0}
+.doc a{color:var(--accent)}
+.doc table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13px}
+.doc th,.doc td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+.doc th{background:var(--panel2)}
+.doc-back{display:inline-block;margin-bottom:6px}
+</style>
+</head>
+<body>
+<div class="bg-glow"></div>
+<main class="doc">
+  <a class="btn-ghost doc-back" href="index.html">← Volver al panel</a>
+  <div><img class="doc-logo" src="logo.png" alt="PoLo" /></div>
+  <div id="docBody"><p class="muted">Cargando documentación...</p></div>
+</main>
+<script>
+function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function inline(s) {
+  return esc(s)
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+}
+async function load() {
+  const md = await (await fetch('PoLo_Documentation.md')).text();
+  const out = [];
+  let inCode = false, inList = false;
+  for (const raw of md.split('\n')) {
+    const line = raw.replace(/\r$/, '');
+    if (/^```/.test(line)) {
+      out.push(inList ? '</ul>' : ''); inList = false;
+      out.push(inCode ? '</code></pre>' : '<pre><code>');
+      inCode = !inCode;
+      continue;
+    }
+    if (inCode) { out.push(esc(line)); continue; }
+    if (/^#{1,3}\s/.test(line)) {
+      if (inList) { out.push('</ul>'); inList = false; }
+      const l = line.match(/^(#+)\s(.*)$/);
+      out.push(`<h${l[1].length}>${inline(l[2])}</h${l[1].length}>`);
+    } else if (/^>\s?/.test(line)) {
+      if (inList) { out.push('</ul>'); inList = false; }
+      out.push(`<blockquote>${inline(line.replace(/^>\s?/, ''))}</blockquote>`);
+    } else if (/^---+$/.test(line)) {
+      if (inList) { out.push('</ul>'); inList = false; }
+      out.push('<hr />');
+    } else if (/^[-*]\s/.test(line)) {
+      if (!inList) { out.push('<ul>'); inList = true; }
+      out.push(`<li>${inline(line.replace(/^[-*]\s/, ''))}</li>`);
+    } else if (!line.trim()) {
+      if (inList) { out.push('</ul>'); inList = false; }
+    } else {
+      if (inList) { out.push('</ul>'); inList = false; }
+      out.push(`<p>${inline(line)}</p>`);
+    }
+  }
+  if (inList) out.push('</ul>');
+  document.getElementById('docBody').innerHTML = out.join('\n');
+}
+load().catch(() => { document.getElementById('docBody').innerHTML = '<p>Abre PoLo_Documentation.md junto a este archivo.</p>'; });
+</script>
+</body>
+</html>

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PoLo — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=13" />
+<link rel="icon" href="logo.png" type="image/png">
+</head>
+<body>
+<div class="bg-glow"></div>
+
+<!-- LOGIN -->
+<div class="login-gate" id="loginGate">
+  <div class="login-card">
+    <img class="login-logo-img" src="logo.png" alt="PoLo logo" onerror="this.style.display='none'" />
+    <h1>PoLo Dashboard</h1>
+    <p>Inicia sesion con Discord para ver solo los servidores donde tu y PoLo estan.</p>
+    <div class="login-steps" id="loginHelp">
+      <strong>Para activar login:</strong><br>
+      1. Copia tu Client ID en Ajustes - Enlaces Discord<br>
+      2. En Developer Portal - OAuth2 - Redirects agrega esta URL:<br>
+      <code id="redirectHint"></code><br>
+      3. Pega la URL de conexión en Ajustes
+    </div>
+    <div class="login-btns">
+      <button class="btn-discord" id="discordLoginBtn">Iniciar sesion con Discord</button>
+    </div>
+    <p style="font-size:12px;margin-top:12px">Se usa OAuth2 con scope identify guilds para listar tus servidores.</p>
+  </div>
+</div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <img class="logo-img" src="logo.png" alt="PoLo" onerror="this.outerHTML='<div class=\'logo\'>P</div>'" />
+    <div>
+      <strong>PoLo</strong>
+      <span id="botTag">polo - bot</span>
+    </div>
+    <span class="status-dot online" id="sideDot" title="Estado"></span>
+  </div>
+
+  <div class="side-servers">
+    <div class="side-servers-head"><span>Servers</span><em id="sideGuildCount">0</em></div>
+    <div class="side-guilds" id="sideGuilds"></div>
+  </div>
+
+  <nav class="nav" id="mainNav">
+    <button class="active" data-view="overview">Resumen</button>
+    <button data-view="servers">Servidores <em id="navServerCount">6</em></button>
+    <button data-view="moderation">Moderacion</button>
+    <button data-view="guild">Servidor</button>
+    <button data-view="help">Ayuda</button>
+    <button data-view="reports">Reportes</button>
+    <button data-view="settings">Ajustes</button>
+  </nav>
+
+  <div class="side-mods">
+    <div class="side-servers-head"><span>Módulos</span></div>
+    <div class="mod-nav" id="sideMods">
+      <details class="mfold" open>
+        <summary>Alertas</summary>
+        <button data-gtab="youtube"><i class="mi" style="--c:#ed4245"></i>YouTube</button>
+      </details>
+      <details class="mfold" open>
+        <summary>General</summary>
+        <button data-gtab="welcome"><i class="mi" style="--c:#57F287"></i>Bienvenidas</button>
+        <button data-gtab="levels"><i class="mi" style="--c:#fee75c"></i>Niveles</button>
+      </details>
+      <details class="mfold" open>
+        <summary>Moderación</summary>
+        <button data-gtab="security"><i class="mi" style="--c:#5865F2"></i>Seguridad</button>
+        <button data-gtab="logs"><i class="mi" style="--c:#949ba4"></i>Logs</button>
+      </details>
+      <details class="mfold" open>
+        <summary>Comunidad</summary>
+        <button data-gtab="tickets"><i class="mi" style="--c:#ff7a45"></i>Tickets</button>
+        <button data-gtab="economy"><i class="mi" style="--c:#2fd4a7"></i>Economía</button>
+      </details>
+      <details class="mfold" open>
+        <summary>Servidor</summary>
+        <button data-gtab="roles"><i class="mi" style="--c:#9b59b6"></i>Roles</button>
+        <button data-gtab="counter"><i class="mi" style="--c:#3498db"></i>Contador</button>
+        <button data-gtab="bump"><i class="mi" style="--c:#e67e22"></i>Bump</button>
+        <button data-gtab="invites"><i class="mi" style="--c:#1abc9c"></i>Invites</button>
+      </details>
+      <details class="mfold" open>
+        <summary>PoLo+</summary>
+        <button data-gtab="ai"><i class="mi" style="--c:#eb459e"></i>IA <b class="crown">♛</b></button>
+      </details>
+    </div>
+  </div>
+
+  <div class="side-card">
+    <div class="guild-pick">
+      <div class="side-card-top"><span>Moderando</span></div>
+      <select class="input" id="guildSelect"><option value="">Selecciona servidor...</option></select>
+    </div>
+    <button class="btn-primary" id="inviteBtn">Invitar a PoLo</button>
+    <div class="row" style="display:flex;gap:8px">
+      <button class="btn-ghost" id="supportBtn" style="flex:1">Soporte</button>
+      <button class="btn-ghost" id="docsBtn" style="flex:1">Docs</button>
+    </div>
+  </div>
+  <p class="ver">PoLo v2.4.1 - discord.js 14</p>
+</aside>
+<div class="scrim" id="scrim"></div>
+
+<main class="main">
+  <header class="topbar">
+    <button class="icon-btn only-mobile" id="menuBtn">Menu</button>
+    <div class="top-actions">
+      <span class="pill" id="statusPill"><i></i> En linea</span>
+      <button class="btn-ghost" id="openInviteTop">Invitar</button>
+      <div class="me"><div class="avatar" id="userAvatar">--</div><div><strong id="userName">Sin sesion</strong><span id="userSub">invitado</span></div></div>
+      <button class="btn-ghost" id="authBtn">Entrar</button>
+    </div>
+  </header>
+
+  <section class="view active" id="view-overview">
+    <div class="hero">
+      <div>
+        <p class="eyebrow"><span class="live"></span> PANEL EN VIVO - POLO</p>
+        <h1>Hola de nuevo, <span class="grad" id="heroName">admin de PoLo</span></h1>
+        <p class="muted">Configura PoLo, personaliza sus módulos y mira la actividad de tus servidores.</p>
+        <div class="hero-btns">
+          <button class="btn-ghost" data-goto="servers">Ver servidores</button>
+        </div>
+      </div>
+      <div class="bot-card">
+        <div class="bot-head">
+          <img class="bot-avatar-img" src="logo.png" alt="PoLo" onerror="this.outerHTML='<div class=\'bot-avatar\'>P</div>'" />
+          <div><strong>PoLo</strong><span>#4821 - <span id="heroStatus">En linea</span></span></div>
+          <span class="badge">BOT</span>
+        </div>
+        <div class="bot-stats">
+          <div><strong id="statServers">0</strong><span>servidores</span></div>
+          <div><strong id="statUsers">0</strong><span>usuarios</span></div>
+          <div><strong id="statCmds">0</strong><span>comandos hoy</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-head"><h3>Eventos recientes</h3></div>
+        <div class="feed" id="feed"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="view-servers">
+    <div class="page-head">
+      <div><h2>Mis servidores <span class="count" id="serverCountLabel"></span></h2><p class="muted" id="serverSubtitle">Solo se muestran servidores donde tu estas y PoLo tambien esta instalado.</p></div>
+      <div class="row"><input class="input" id="serverSearch" placeholder="Filtrar servidores..." /><button class="btn-primary" id="refreshServers">Sincronizar</button></div>
+    </div>
+    <div class="row" style="margin-bottom:12px">
+      <label class="check"><input type="checkbox" id="onlyPolo" checked /> Mostrar solo donde esta PoLo</label>
+      <span class="tag" id="loginTag">sin sesion</span>
+    </div>
+    <div class="server-grid" id="serverGrid"></div>
+  </section>
+
+  <section class="view" id="view-moderation">
+    <div class="page-head"><div><h2>Moderacion</h2><p class="muted">Acciones rapidas y cola de reportes.</p></div></div>
+    <div class="grid2">
+      <div class="card">
+        <h3>Sancionar usuario</h3>
+        <form class="form" id="modForm">
+          <label>Usuario<input class="input" id="modUser" placeholder="@usuario" required /></label>
+          <div class="row2">
+            <label>Accion<select class="input" id="modAction"><option value="warn">Warn</option><option value="mute">Timeout 10m</option><option value="kick">Kick</option><option value="ban">Ban</option></select></label>
+            <label>Servidor<select class="input" id="modServer"></select></label>
+          </div>
+          <label>Motivo<input class="input" id="modReason" placeholder="spam, insultos..." /></label>
+          <button class="btn-primary" type="submit">Aplicar sancion</button>
+        </form>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Cola de reportes <span class="tag" id="repCount">4 pendientes</span></h3></div>
+        <div class="feed" id="reports"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="view-guild">
+    <div class="page-head">
+      <div><h2 id="guildTitle">Servidor</h2><p class="muted">Elige un servidor en la barra lateral para personalizar PoLo.</p></div>
+    </div>
+    <div id="noGuildBox" class="card">
+      <h3>Elige un servidor</h3>
+      <p class="muted">Selecciona un servidor en Moderando o desde la lista para configurar sus modulos.</p>
+      <div class="row"><button class="btn-primary" data-goto="servers">Ver servidores</button></div>
+    </div>
+    <div id="guildPanelsHost">
+    <div class="card form gpanel" id="gtab-welcome">
+      <h3>Bienvenidas</h3>
+      <label>Canal</label>
+      <div class="row"><input class="input" id="wChannel" readonly placeholder="Elige un canal..." style="flex:1" /><button type="button" class="btn-ghost" data-pick="wChannel">Elegir</button></div>
+      <label>Mensaje<textarea class="input" id="wMsg" rows="3" placeholder="Bienvenido {usuario} a {servidor}"></textarea></label>
+      <p class="muted">Variables: {usuario} {servidor}</p>
+      <label>Imagen de fondo (PNG o JPG, max 5MB)<input class="input" id="wImage" type="file" accept="image/png,image/jpeg" /></label>
+      <div id="wPreview"></div>
+      <button class="btn-primary" id="wSave">Guardar bienvenida</button>
+    </div>
+    <div class="card form gpanel" id="gtab-levels">
+      <h3>Niveles</h3>
+      <label>Canal de anuncios</label>
+      <div class="row"><input class="input" id="lChannel" readonly placeholder="Elige un canal..." style="flex:1" /><button type="button" class="btn-ghost" data-pick="lChannel">Elegir</button></div>
+      <label>Mensaje<textarea class="input" id="lMsg" rows="2" placeholder="!subio al nivel **{nivel}**"></textarea></label>
+      <p class="muted">Variables: {usuario} {nivel} {servidor}</p>
+      <button class="btn-primary" id="lSave">Guardar niveles</button>
+    </div>
+    <div class="card form gpanel" id="gtab-ai">
+      <h3>IA de PoLo <span class="tag" id="aiGate">PoLo+</span></h3>
+      <div id="aiLock" class="ai-lock hidden">💎 Esta función es exclusiva de <b>PoLo+</b>.<br>Pide premium al dueño del bot para usar un prompt personalizado.</div>
+      <label class="switch-row"><span>IA activada</span><button type="button" class="switch on" id="aiEnabled"></button></label>
+      <label>Prompt personalizado (premium)<textarea class="input" id="aiPrompt" rows="4" placeholder="Rol extra para este servidor..."></textarea></label>
+      <p class="muted">Vacío = sin prompt (IA normal).</p>
+      <button class="btn-primary" id="aiSave">Guardar IA</button>
+    </div>
+    <div class="card form gpanel" id="gtab-security">
+      <h3>🛡️ Seguridad / Anti-Raid</h3>
+      <label class="switch-row"><span>Protección activada</span><button type="button" class="switch" id="secEnabled"></button></label>
+      <label class="switch-row"><span>Anti-links</span><button type="button" class="switch" id="secLinks"></button></label>
+      <label class="switch-row"><span>Anti-spam</span><button type="button" class="switch" id="secSpam"></button></label>
+      <label class="switch-row"><span>Anti-phishing</span><button type="button" class="switch" id="secPhish"></button></label>
+      <label>Canal de logs</label>
+      <div class="row"><input class="input" id="secLog" readonly placeholder="Elige un canal..." style="flex:1" /><button type="button" class="btn-ghost" data-pick="secLog">Elegir</button></div>
+      <button class="btn-primary" id="secSave">Guardar seguridad</button>
+    </div>
+    <div class="card form gpanel" id="gtab-tickets">
+      <h3>🎫 Tickets</h3>
+      <label>Título del panel<input class="input" id="tkTitle" placeholder="Soporte de {server}" /></label>
+      <label>Descripción<textarea class="input" id="tkDesc" rows="3" placeholder="Pulsa el botón para abrir un ticket..."></textarea></label>
+      <label>Canal donde se publica el panel</label>
+      <div class="row"><input class="input" id="tkChannel" readonly placeholder="Elige un canal..." style="flex:1" /><button type="button" class="btn-ghost" data-pick="tkChannel">Elegir</button></div>
+      <label>Roles staff (IDs separados por coma)<input class="input" id="tkRoles" placeholder="123..., 456..." /></label>
+      <div class="row">
+        <button class="btn-primary" id="tkSave">Guardar tickets</button>
+        <button class="btn-discord" id="tkSend">Publicar panel</button>
+      </div>
+    </div>
+    <div class="card form gpanel" id="gtab-economy">
+      <h3>💰 Economía</h3>
+      <div class="row2">
+        <label>Cooldown work (seg)<input class="input" id="ecoCooldown" type="number" min="1" max="3600" /></label>
+        <label>Max por work<input class="input" id="ecoMax" type="number" min="1" max="100000" /></label>
+      </div>
+      <label>Canal economía</label>
+      <div class="row"><input class="input" id="ecoChannel" readonly placeholder="Elige un canal..." style="flex:1" /><button type="button" class="btn-ghost" data-pick="ecoChannel">Elegir</button></div>
+      <button class="btn-primary" id="ecoSave">Guardar economía</button>
+    </div>
+    <div class="card form gpanel" id="gtab-youtube">
+      <h3>📺 Alertas YouTube</h3>
+      <div class="feed" id="ytList" style="margin-bottom:12px"></div>
+      <label>ID canal YouTube<input class="input" id="ytChannel" placeholder="UC..." /></label>
+      <label>Nombre canal<input class="input" id="ytName" placeholder="Mi canal" /></label>
+      <div class="row2">
+        <label>Canal aviso</label>
+        <div class="row"><input class="input" id="ytAnnounce" readonly placeholder="Elige un canal..." style="flex:1" /><button type="button" class="btn-ghost" data-pick="ytAnnounce">Elegir</button></div>
+        <label>Rol a mencionar ID<input class="input" id="ytRole" placeholder="ID rol (opcional)" /></label>
+      </div>
+      <label>Mensaje<textarea class="input" id="ytMsg" rows="2" placeholder="Nuevo video!"></textarea></label>
+      <div class="row"><button class="btn-primary" id="ytAdd">Añadir alerta</button></div>
+    </div>
+    <div class="card form gpanel" id="gtab-roles">
+      <h3>🎭 Roles automáticos al entrar</h3>
+      <label>IDs de roles (separados por coma, max 5)<input class="input" id="jrRoles" placeholder="123..., 456..." /></label>
+      <button class="btn-primary" id="jrSave">Guardar roles</button>
+    </div>
+    <div class="card form gpanel" id="gtab-logs">
+      <h3>📝 Logs del servidor</h3>
+      <label>Canal de logs</label>
+      <div class="row"><input class="input" id="lgChannel" readonly placeholder="Elige un canal..." style="flex:1" /><button type="button" class="btn-ghost" data-pick="lgChannel">Elegir</button></div>
+      <label>Nivel (0-5)<input class="input" id="lgLevel" type="number" min="0" max="5" /></label>
+      <label>Canal de sanciones</label>
+      <div class="row"><input class="input" id="mlChannel" readonly placeholder="Elige un canal..." style="flex:1" /><button type="button" class="btn-ghost" data-pick="mlChannel">Elegir</button></div>
+      <button class="btn-primary" id="lgSave">Guardar logs</button>
+    </div>
+    <div class="card form gpanel" id="gtab-counter">
+      <h3>🔢 Contador</h3>
+      <label>Canal del contador</label>
+      <div class="row"><input class="input" id="ctChannel" readonly placeholder="Elige un canal..." style="flex:1" /><button type="button" class="btn-ghost" data-pick="ctChannel">Elegir</button></div>
+      <button class="btn-primary" id="ctSave">Guardar contador</button>
+    </div>
+    <div class="card form gpanel" id="gtab-bump">
+      <h3>📌 Bump</h3>
+      <label class="switch-row"><span>Recordatorio activo</span><button type="button" class="switch" id="bpActive"></button></label>
+      <label>Canal</label>
+      <div class="row"><input class="input" id="bpChannel" readonly placeholder="Elige un canal..." style="flex:1" /><button type="button" class="btn-ghost" data-pick="bpChannel">Elegir</button></div>
+      <label>Mensaje<textarea class="input" id="bpMsg" rows="2" placeholder="!Es hora de hacer bump!"></textarea></label>
+      <button class="btn-primary" id="bpSave">Guardar bump</button>
+    </div>
+    <div class="card form gpanel" id="gtab-invites">
+      <h3>✉️ Invites</h3>
+      <label>Canal de registro</label>
+      <div class="row"><input class="input" id="ivChannel" readonly placeholder="Elige un canal..." style="flex:1" /><button type="button" class="btn-ghost" data-pick="ivChannel">Elegir</button></div>
+      <button class="btn-primary" id="ivSave">Guardar invites</button>
+    </div>
+    </div>
+  </section>
+
+  <section class="view" id="view-help">
+    <div class="page-head">
+      <div><h2>Ayuda <span class="count" id="helpCount"></span></h2><p class="muted">Todos los comandos del bot. Filtra por nombre o categoría.</p></div>
+      <div class="row">
+        <div class="chips" id="helpChips">
+          <button class="chip active" data-cat="all">Todos</button>
+          <button class="chip" data-cat="mod">Moderación</button>
+          <button class="chip" data-cat="fun">Diversión</button>
+          <button class="chip" data-cat="music">Música</button>
+          <button class="chip" data-cat="util">Utilidad</button>
+        </div>
+        <input class="input" id="helpSearch" placeholder="Buscar comando..." />
+      </div>
+    </div>
+    <div class="cmd-grid" id="helpGrid"><p class="muted">Cargando comandos del bot...</p></div>
+  </section>
+
+  <section class="view" id="view-reports">
+    <div class="page-head"><div><h2>Reportar bug</h2><p class="muted">Llega al canal de reportes y al owner por MD, igual que /report.</p></div></div>
+    <form class="card form" id="bugForm" style="max-width:560px">
+      <label>Bug<input class="input" id="bugText" placeholder="Describe el bug..." required /></label>
+      <label>Severidad<select class="input" id="bugSev"><option value="minor">Menor</option><option value="severe">Grave</option><option value="unknown">No se</option></select></label>
+      <label>Nota extra<input class="input" id="bugNote" placeholder="opcional" /></label>
+      <button class="btn-primary" type="submit">Enviar reporte</button>
+    </form>
+  </section>
+
+  <section class="view" id="view-settings">
+    <div class="page-head"><div><h2>Ajustes de PoLo</h2><p class="muted">Idioma, enlaces Discord y conexión.</p></div></div>
+    <div class="grid2">
+      <form class="card form" id="settingsForm">
+        <h3>General</h3>
+        <label>Idioma<select class="input" id="setLang"><option value="es">Espanol</option><option value="en">English</option></select></label>
+        <p class="muted">Prefijo y presencia solo los cambia el Staff en la barra lateral.</p>
+        <label class="switch-row"><span>Auto-mod anti-spam</span><button type="button" class="switch on" id="setAutomod"></button></label>
+        <label class="switch-row"><span>Logs de auditoria</span><button type="button" class="switch on" id="setAudit"></button></label>
+        <button class="btn-primary" type="submit">Guardar cambios</button>
+      </form>
+
+      <div class="card form">
+        <h3>Enlaces Discord y login</h3>
+        <p class="muted">Pega aqui tus datos una sola vez. El login usa Client ID + Redirect URI.</p>
+        <label>Client ID (Application ID)<input class="input" id="setClientId" placeholder="123456789012345678" /></label>
+        <label>Redirect URI OAuth2<input class="input" id="setRedirect" placeholder="http://localhost:8000/polo-dashboard/index.html" /></label>
+        <label>Invite URL (vacio = auto)<input class="input" id="setInvite" placeholder="https://discord.com/oauth2/authorize?..." /></label>
+        <label>Servidor de soporte<input class="input" id="setSupport" placeholder="https://discord.gg/tu-codigo" /></label>
+        <label>Docs / Web<input class="input" id="setDocs" placeholder="https://polo.gg/docs" /></label>
+        <label>API URL del bot<input class="input" id="apiUrl" placeholder="http://localhost:3000" /></label>
+        <div class="row">
+          <button class="btn-discord" type="button" id="loginTestBtn">Iniciar sesion con Discord</button>
+          <button class="btn-ghost" type="button" id="logoutBtn">Cerrar sesion</button>
+        </div>
+        <div class="row">
+          <button class="btn-ghost" type="button" id="testApi">Probar conexion</button>
+          <button class="btn-ghost" type="button" id="copyInvite">Copiar invite</button>
+        </div>
+        <p class="muted" id="apiMsg"></p>
+        <hr />
+        <h3>Zona peligrosa</h3>
+        <div class="row"><button class="btn-danger" type="button" id="resetBtn">Borrar config local</button></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">Panel de <b>PoLo</b></footer>
+</main>
+
+<button class="ai-fab" id="aiFab" title="Hablar con PoLo"><img src="logo.png" alt="P" onerror="this.outerHTML='P'" /></button>
+<div class="ai-chat" id="aiChat">
+  <div class="ai-chat-head"><img class="ai-ava" src="logo.png" alt="PoLo" /><div>PoLo IA<small>en línea · te ayudo con el panel</small></div><button id="aiClose">✕</button></div>
+  <div class="ai-chat-body" id="aiBody"></div>
+  <form class="ai-chat-form" id="aiForm">
+    <input id="aiInput" placeholder="Pregunta sobre el dashboard..." autocomplete="off" />
+    <button class="btn-primary" type="submit">Enviar</button>
+  </form>
+</div>
+
+<div class="modal-back hidden" id="chanModal">
+  <div class="modal">
+    <div class="card-head"><h3>Elegir canal</h3><button class="btn-ghost" id="chanClose" style="padding:6px 12px">Cerrar</button></div>
+    <div class="feed" id="chanList"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="config.js?v=13"></script>
+<script src="app.js?v=13"></script>
+</body>
+</html>
