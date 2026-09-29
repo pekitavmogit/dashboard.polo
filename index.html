@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PoLo — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="style.css" />
+<link rel="icon" href="logo.png" type="image/png">
+</head>
+<body>
+<div class="bg-glow"></div>
+
+<!-- LOGIN -->
+<div class="login-gate" id="loginGate">
+  <div class="login-card">
+    <img class="login-logo-img" src="logo.png" alt="PoLo logo" onerror="this.style.display='none'" />
+    <h1>PoLo Dashboard</h1>
+    <p>Inicia sesion con Discord para ver solo los servidores donde tu y PoLo estan.</p>
+    <div class="login-steps" id="loginHelp">
+      <strong>Para activar login:</strong><br>
+      1. Copia tu Client ID en Ajustes - Enlaces Discord<br>
+      2. En Developer Portal - OAuth2 - Redirects agrega esta URL:<br>
+      <code id="redirectHint"></code><br>
+      3. Configura API URL de tu backend (ver BACKEND.md)
+    </div>
+    <div class="login-btns">
+      <button class="btn-discord" id="discordLoginBtn">Iniciar sesion con Discord</button>
+    </div>
+    <p style="font-size:12px;margin-top:12px">Se usa OAuth2 con scope identify guilds para listar tus servidores.</p>
+  </div>
+</div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <img class="logo-img" src="logo.png" alt="PoLo" onerror="this.outerHTML='<div class=\'logo\'>P</div>'" />
+    <div>
+      <strong>PoLo</strong>
+      <span id="botTag">polo - bot</span>
+    </div>
+    <span class="status-dot online" id="sideDot" title="Estado"></span>
+  </div>
+
+  <nav class="nav" id="mainNav">
+    <button class="active" data-view="overview">Resumen</button>
+    <button data-view="servers">Servidores <em id="navServerCount">0</em></button>
+    <button data-view="commands">Comandos</button>
+    <button data-view="console" data-requires="admin">Consola</button>
+    <button data-view="moderation" data-requires="admin">Moderacion</button>
+    <button data-view="settings" data-requires="admin">Ajustes</button>
+  </nav>
+
+  <div class="side-card">
+    <div class="side-card-top"><span>Latencia</span><strong id="sidePing">--</strong></div>
+    <div class="bar"><i id="pingBar" style="width:0%"></i></div>
+    <div class="side-card-top"><span>Uptime</span><strong id="sideUptime">--</strong></div>
+    <button class="btn-primary" id="inviteBtn">Invitar a PoLo</button>
+    <div class="row" style="display:flex;gap:8px">
+      <button class="btn-ghost" id="supportBtn" style="flex:1">Soporte</button>
+      <button class="btn-ghost" id="docsBtn" style="flex:1">Docs</button>
+    </div>
+    <button class="btn-ghost" id="toggleBotBtn" data-requires="admin">Pausar bot</button>
+  </div>
+  <p class="ver">PoLo v2.4.1 - discord.js 14</p>
+</aside>
+<div class="scrim" id="scrim"></div>
+
+<main class="main">
+  <header class="topbar">
+    <button class="icon-btn only-mobile" id="menuBtn">Menu</button>
+    <div class="search">
+      <span>/</span>
+      <input id="globalSearch" placeholder="Buscar servidor, comando, log...  ( pulsa / )" autocomplete="off" />
+    </div>
+    <div class="top-actions">
+      <span class="pill" id="statusPill"><i></i> En linea</span>
+      <button class="btn-ghost" id="openInviteTop">Invitar</button>
+      <div class="me"><div class="avatar" id="userAvatar">--</div><div><strong id="userName">Sin sesion</strong><span id="userSub">invitado</span></div></div>
+      <button class="btn-ghost" id="authBtn">Entrar</button>
+    </div>
+  </header>
+
+  <section class="view active" id="view-overview">
+    <div class="hero">
+      <div>
+        <p class="eyebrow"><span class="live"></span> PANEL EN VIVO - POLO</p>
+        <h1>Hola de nuevo, <span class="grad">admin de PoLo</span></h1>
+        <p class="muted">Todo tu bot en un vistazo. Pausa, configura, testea comandos y mira que pasa en tus servidores en tiempo real.</p>
+        <div class="hero-btns">
+          <button class="btn-primary" data-goto="console">Probar comando</button>
+          <button class="btn-ghost" data-goto="servers">Ver servidores</button>
+          <button class="btn-ghost" id="restartBtn">Reiniciar</button>
+        </div>
+      </div>
+      <div class="bot-card">
+        <div class="bot-head">
+          <img class="bot-avatar-img" src="logo.png" alt="PoLo" onerror="this.outerHTML='<div class=\'bot-avatar\'>P</div>'" />
+          <div><strong>PoLo</strong><span>#4821 - <span id="heroStatus">En linea</span></span></div>
+          <span class="badge">BOT</span>
+        </div>
+        <div class="bot-stats">
+          <div><strong id="statServers">0</strong><span>servidores</span></div>
+          <div><strong id="statUsers">0</strong><span>usuarios</span></div>
+          <div><strong id="statCmds">0</strong><span>comandos hoy</span></div>
+        </div>
+        <div class="presence">
+          <span>Jugando a:</span>
+          <code id="presenceText">/help - polo.gg</code>
+          <button id="editPresence">Editar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cards">
+      <div class="card stat"><span>Ping API</span><strong id="cPing">42 ms</strong><small class="up">-6ms vs ayer</small><div class="spark" id="sparkPing"></div></div>
+      <div class="card stat"><span>RAM</span><strong id="cRam">312 MB</strong><small class="muted2">de 512 MB</small><div class="bar"><i id="ramBar" style="width:61%"></i></div></div>
+      <div class="card stat"><span>CPU</span><strong id="cCpu">12 %</strong><small class="up">estable</small><div class="bar"><i id="cpuBar" style="width:12%"></i></div></div>
+      <div class="card stat"><span>Comandos/min</span><strong id="cCpm">18</strong><small class="up">+12% esta hora</small><div class="spark" id="sparkCpm"></div></div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-head"><h3>Actividad de comandos <small>ultimas 24h</small></h3><div class="legend"><i class="bl"></i>usos <i class="gr"></i>errores</div></div>
+        <canvas id="chActivity" height="120"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Crecimiento <small>servidores</small></h3><span class="tag">+8 esta semana</span></div>
+        <canvas id="chGrowth" height="120"></canvas>
+        <div class="top-cmds" id="topCmds"></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-head"><h3>Eventos recientes</h3><button class="link" data-goto="console">ver consola</button></div>
+        <div class="feed" id="feed"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Acciones rapidas</h3></div>
+        <div class="quick">
+          <button data-qa="announce">Anunciar en todos</button>
+          <button data-qa="clear">Clear en #general</button>
+          <button data-qa="backup">Backup config</button>
+          <button data-qa="update">Desplegar update</button>
+        </div>
+        <div class="note"><b>Tip:</b> escribe <code>/</code> para enfocar el buscador. Los comandos se envian a tu backend.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="view-servers">
+    <div class="page-head">
+      <div><h2>Mis servidores <span class="count" id="serverCountLabel"></span></h2><p class="muted" id="serverSubtitle">Solo se muestran servidores donde tu estas y PoLo tambien esta instalado.</p></div>
+      <div class="row"><input class="input" id="serverSearch" placeholder="Filtrar servidores..." /><button class="btn-primary" id="refreshServers">Sincronizar</button></div>
+    </div>
+    <div class="row" style="margin-bottom:12px">
+      <label class="check"><input type="checkbox" id="onlyPolo" checked /> Mostrar solo donde esta PoLo</label>
+      <span class="tag" id="loginTag">sin sesion</span>
+    </div>
+    <div class="server-grid" id="serverGrid"></div>
+  </section>
+
+  <section class="view" id="view-commands">
+    <div class="page-head">
+      <div><h2>Comandos</h2><p class="muted">Activa o desactiva modulos. Se envia a tu backend.</p></div>
+      <div class="row">
+        <div class="chips" id="catChips">
+          <button class="chip active" data-cat="all">Todos</button>
+          <button class="chip" data-cat="mod">Moderacion</button>
+          <button class="chip" data-cat="fun">Diversion</button>
+          <button class="chip" data-cat="music">Musica</button>
+          <button class="chip" data-cat="util">Utilidad</button>
+        </div>
+        <input class="input" id="cmdSearch" placeholder="Buscar comando..." />
+      </div>
+    </div>
+    <div class="cmd-grid" id="cmdGrid"></div>
+  </section>
+
+  <section class="view" id="view-console">
+    <div class="page-head">
+      <div><h2>Consola en vivo</h2><p class="muted">Logs reales desde <code>/api/logs</code>. Envia comandos con <code>POST /api/command</code>.</p></div>
+      <div class="row">
+        <select class="input" id="logLevel"><option value="all">Todos los niveles</option><option value="info">INFO</option><option value="cmd">CMD</option><option value="warn">WARN</option><option value="error">ERROR</option></select>
+        <button class="btn-ghost" id="clearLogs">Limpiar</button>
+        <button class="btn-ghost" id="pauseLogs">Pausar</button>
+      </div>
+    </div>
+    <div class="terminal card">
+      <div class="term-head"><span class="dots"><i></i><i></i><i></i></span><span>polo@bot: ~/logs - live</span><span class="tag green" id="logState">LIVE</span></div>
+      <div class="term-body" id="termBody"></div>
+      <form class="term-input" id="cmdForm">
+        <span>&gt;</span>
+        <input id="cmdInput" placeholder="!help - !ban @user motivo - !play url" autocomplete="off" />
+        <button class="btn-primary" type="submit">Enviar</button>
+      </form>
+    </div>
+  </section>
+
+  <section class="view" id="view-moderation">
+    <div class="page-head"><div><h2>Moderacion</h2><p class="muted">Acciones rapidas y cola de reportes.</p></div></div>
+    <div class="grid2">
+      <div class="card">
+        <h3>Sancionar usuario</h3>
+        <form class="form" id="modForm">
+          <label>Usuario<input class="input" id="modUser" placeholder="@usuario" required /></label>
+          <div class="row2">
+            <label>Accion<select class="input" id="modAction"><option value="warn">Warn</option><option value="mute">Timeout 10m</option><option value="kick">Kick</option><option value="ban">Ban</option></select></label>
+            <label>Servidor<select class="input" id="modServer"></select></label>
+          </div>
+          <label>Motivo<input class="input" id="modReason" placeholder="spam, insultos..." /></label>
+          <button class="btn-primary" type="submit">Aplicar sancion</button>
+        </form>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Cola de reportes <span class="tag" id="repCount">4 pendientes</span></h3></div>
+        <div class="feed" id="reports"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="view-settings">
+    <div class="page-head"><div><h2>Ajustes de PoLo</h2><p class="muted">Prefijo, presencia, bienvenidas, enlaces Discord y backend.</p></div></div>
+    <div class="grid2">
+      <form class="card form" id="settingsForm">
+        <h3>General</h3>
+        <div class="row2">
+          <label>Prefijo<input class="input" id="setPrefix" value="!" maxlength="3" /></label>
+          <label>Idioma<select class="input" id="setLang"><option value="es">Espanol</option><option value="en">English</option></select></label>
+        </div>
+        <label>Texto de presencia (jugando a...)<input class="input" id="setPresence" value="/help - polo.gg" /></label>
+        <label>Mensaje de bienvenida<textarea class="input" id="setWelcome" rows="2">Bienvenido {user} a {server}. Usa !help para empezar.</textarea></label>
+        <label class="switch-row"><span>Auto-mod anti-spam</span><button type="button" class="switch on" id="setAutomod"></button></label>
+        <label class="switch-row"><span>Logs de auditoria</span><button type="button" class="switch on" id="setAudit"></button></label>
+        <button class="btn-primary" type="submit">Guardar cambios</button>
+      </form>
+
+      <div class="card form">
+        <h3>Enlaces Discord y login</h3>
+        <p class="muted">Pega aqui tus datos una sola vez. El login usa Client ID + Redirect URI.</p>
+        <label>Client ID (Application ID)<input class="input" id="setClientId" placeholder="123456789012345678" /></label>
+        <label>Redirect URI OAuth2<input class="input" id="setRedirect" placeholder="http://localhost:8000/polo-dashboard/index.html" /></label>
+        <label>Invite URL (vacio = auto)<input class="input" id="setInvite" placeholder="https://discord.com/oauth2/authorize?..." /></label>
+        <label>Servidor de soporte<input class="input" id="setSupport" placeholder="https://discord.gg/tu-codigo" /></label>
+        <label>Docs / Web<input class="input" id="setDocs" placeholder="https://polo.gg/docs" /></label>
+        <label>API URL del bot<input class="input" id="apiUrl" placeholder="http://localhost:3000" /></label>
+        <div class="row">
+          <button class="btn-discord" type="button" id="loginTestBtn">Iniciar sesion con Discord</button>
+          <button class="btn-ghost" type="button" id="logoutBtn">Cerrar sesion</button>
+        </div>
+        <div class="row">
+          <button class="btn-ghost" type="button" id="testApi">Probar conexion</button>
+          <button class="btn-ghost" type="button" id="copyInvite">Copiar invite</button>
+        </div>
+        <p class="muted" id="apiMsg"></p>
+        <div class="code">Endpoints que debe exponer tu backend (ver BACKEND.md):
+POST /auth/exchange
+GET /api/stats - GET /api/guilds
+GET /api/activity - GET /api/logs - GET /api/reports
+POST /api/command - POST /api/moderation</div>
+        <hr />
+        <h3>Zona peligrosa</h3>
+        <div class="row"><button class="btn-danger" type="button" id="resetBtn">Borrar config local</button></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">Panel de <b>PoLo</b> - Pulsa <code>/</code> para buscar - Requiere backend conectado</footer>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
