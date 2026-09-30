@@ -130,6 +130,9 @@ function doLogout() {
   showNoGuild();
   paintPremiumLock();
   $('#staffQueue').classList.add('hidden');
+  $('#navSettings').style.display = 'none';
+  $('#settingsBody').classList.add('hidden');
+  $('#settingsLocked').classList.remove('hidden');
   toast('Sesion cerrada');
 }
 async function handleOAuthCallback() {
@@ -312,8 +315,15 @@ async function refreshMe() {
   paintPremiumLock();
   try {
     const s = await apiGet('/api/staff');
+    ME.isStaff = !!s.isStaff;
     $('#staffQueue').classList.toggle('hidden', !s.isStaff);
-  } catch { $('#staffQueue').classList.add('hidden'); }
+  } catch { ME.isStaff = false; $('#staffQueue').classList.add('hidden'); }
+  $('#navSettings').style.display = ME.isStaff ? '' : 'none';
+  $('#settingsBody').classList.toggle('hidden', !ME.isStaff);
+  $('#settingsLocked').classList.toggle('hidden', ME.isStaff);
+  if (!ME.isStaff && $('#view-settings').classList.contains('active')) {
+    document.querySelector('[data-view="overview"]').click();
+  }
 }
 
 // ---------- MODULOS: hub estilo Koya + detalle ----------
@@ -367,9 +377,9 @@ function paintSwitches() {
 async function loadGuildConfig(id) {
   try {
     const j = await apiGet('/api/guilds/' + id + '/config');
-    $('#wChannel').value = j.welcome?.channelId || '';
+    setChan('wChannel', j.welcome?.channelId);
     $('#wMsg').value = j.welcome?.mensaje || '';
-    $('#lChannel').value = j.levels?.levelChannel || '';
+    setChan('lChannel', j.levels?.levelChannel);
     $('#lMsg').value = j.levels?.mensaje || '';
     aiOn = j.ai?.enabled !== false;
     $('#aiEnabled').classList.toggle('on', aiOn);
@@ -382,28 +392,29 @@ async function loadGuildConfig(id) {
       phish: s.antiPhishing?.enabled === true,
     };
     paintSwitches();
-    $('#secLog').value = s.logChannelId || '';
+    setChan('secLog', s.logChannelId);
     $('#tkTitle').value = j.tickets?.panelTitle || '';
     $('#tkDesc').value = j.tickets?.panelDesc || '';
-    $('#tkChannel').value = j.tickets?.panelChannelId || '';
+    setChan('tkChannel', j.tickets?.panelChannelId);
     $('#tkRoles').value = (j.tickets?.staffRoles || []).join(', ');
     $('#ecoCooldown').value = j.economy?.workCooldownSeconds ?? '';
     $('#ecoMax').value = j.economy?.workMax ?? '';
-    $('#ecoChannel').value = j.economy?.economyChannelId || '';
+    setChan('ecoChannel', j.economy?.economyChannelId);
     $('#jrRoles').value = (j.joinroles || []).join(', ');
-    $('#lgChannel').value = j.logs?.logChannel || '';
+    setChan('lgChannel', j.logs?.logChannel);
     $('#lgLevel').value = j.logs?.logLevel ?? '';
-    $('#mlChannel').value = j.modlog?.channelId || '';
-    $('#ctChannel').value = j.counter?.channelId || '';
-    $('#ivChannel').value = j.invites?.channelId || '';
+    setChan('mlChannel', j.modlog?.channelId);
+    setChan('ctChannel', j.counter?.channelId);
+    setChan('ivChannel', j.invites?.channelId);
     bpOn = !!j.bump?.activo;
     $('#bpActive').classList.toggle('on', bpOn);
-    $('#bpChannel').value = j.bump?.canalId || '';
+    setChan('bpChannel', j.bump?.canalId);
     $('#bpMsg').value = j.bump?.mensaje || '';
     $('#wPreview').innerHTML = j.welcomeImage
       ? `<img src="${j.welcomeImage}" alt="fondo bienvenida" />`
       : (j.hasWelcomeImage ? '<p class="muted">Hay imagen guardada (muy pesada para vista previa).</p>' : '');
     $('#wImage').value = '';
+    await paintChanSelects();
     renderYt(j.youtube || []);
   } catch { toast('No se pudo cargar la config del servidor'); }
 }
@@ -682,32 +693,37 @@ $('#inviteBtn').onclick = () => openLink(getInviteUrl(), 'Configura tu Client ID
 $('#openInviteTop').onclick = () => openLink(getInviteUrl(), 'Configura tu Client ID en Ajustes');
 $('#supportBtn').onclick = () => openLink(S.supportServer || CFG.supportServer, 'Configura tu servidor de soporte en Ajustes');
 $('#docsBtn').onclick = () => window.open('docs.html', '_blank');
-// ---------- SELECTOR DE CANALES (modal, sin IDs) ----------
-let chanTarget = null;
-async function openChanPicker(inputId) {
-  if (!SELECTED_GUILD) { toast('Selecciona un servidor primero'); return; }
-  chanTarget = inputId;
-  $('#chanList').innerHTML = '<p class="muted">Cargando canales...</p>';
-  $('#chanModal').classList.remove('hidden');
-  try {
-    const j = await apiGet('/api/guilds/' + SELECTED_GUILD + '/channels');
-    const list = j.channels || [];
-    $('#chanList').innerHTML = list.map(c =>
-      `<button class="chan-row" data-ch="${c.id}" data-nm="${c.name}"># ${c.name}</button>`
-    ).join('') || '<p class="muted">Sin canales. ¿PoLo está en el servidor?</p>';
-    $$('#chanList [data-ch]').forEach(b => b.onclick = () => {
-      document.getElementById(chanTarget).value = b.dataset.ch;
-      $('#chanModal').classList.add('hidden');
-      toast('#' + b.dataset.nm + ' seleccionado');
-    });
-  } catch { $('#chanList').innerHTML = '<p class="muted">No se pudieron cargar los canales.</p>'; }
+// ---------- DESPLEGABLES DE CANALES ----------
+const CHAN_SELECTS = ['wChannel', 'lChannel', 'tkChannel', 'ecoChannel', 'lgChannel', 'mlChannel', 'ivChannel', 'ctChannel', 'bpChannel', 'secLog', 'ytAnnounce'];
+let chanCache = {};
+async function getChannels() {
+  if (!SELECTED_GUILD) return [];
+  if (!chanCache[SELECTED_GUILD]) {
+    try {
+      const j = await apiGet('/api/guilds/' + SELECTED_GUILD + '/channels');
+      chanCache[SELECTED_GUILD] = j.channels || [];
+    } catch { chanCache[SELECTED_GUILD] = []; }
+  }
+  return chanCache[SELECTED_GUILD];
 }
-document.addEventListener('click', e => {
-  const b = e.target.closest('[data-pick]');
-  if (b) openChanPicker(b.dataset.pick);
-});
-$('#chanClose').onclick = () => $('#chanModal').classList.add('hidden');
-$('#chanModal').addEventListener('click', e => { if (e.target.id === 'chanModal') e.target.classList.add('hidden'); });
+function setChan(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.dataset.val = val || '';
+}
+async function paintChanSelects() {
+  const list = await getChannels();
+  for (const id of CHAN_SELECTS) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    const cur = el.dataset.val || el.value || '';
+    el.innerHTML = '<option value="">Elige un canal...</option>' + list.map(c =>
+      `<option value="${c.id}"># ${c.name} — ${c.kind === 2 ? 'voz' : 'texto'}</option>`).join('');
+    if (cur) {
+      if (!list.some(c => c.id === cur)) el.insertAdjacentHTML('beforeend', `<option value="${cur}">ID ${cur} (¿borrado?)</option>`);
+      el.value = cur;
+    }
+  }
+}
 $('#discordLoginBtn').onclick = doLogin;
 $('#loginTestBtn').onclick = () => {
   S.clientId = $('#setClientId').value.trim();
