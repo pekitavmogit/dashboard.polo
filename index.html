@@ -6,7 +6,7 @@
 <title>PoLo — Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=14" />
+<link rel="stylesheet" href="style.css?v=16" />
 <link rel="icon" href="logo.png" type="image/png">
 </head>
 <body>
@@ -53,7 +53,7 @@
     <button data-view="guild">Servidor</button>
     <button data-view="help">Ayuda</button>
     <button data-view="reports">Reportes</button>
-    <button data-view="settings">Ajustes</button>
+    <button data-view="settings" id="navSettings" style="display:none">Ajustes</button>
   </nav>
 
   <div class="side-mods">
@@ -175,7 +175,7 @@
     <div class="card form gpanel" id="gtab-welcome">
       <h3>Bienvenidas</h3>
       <label>Canal</label>
-      <div class="row"><input class="input" id="wChannel" readonly placeholder="Elige un canal..." style="flex:1" /><button type="button" class="btn-ghost" data-pick="wChannel">Elegir</button></div>
+      <select class="input" id="wChannel" style="width:100%"><option value="">Elige un canal...</option></select>
       <label>Mensaje<textarea class="input" id="wMsg" rows="3" placeholder="Bienvenido {usuario} a {servidor}"></textarea></label>
       <p class="muted">Variables: {usuario} {servidor}</p>
       <label>Imagen de fondo (PNG o JPG, max 5MB)<input class="input" id="wImage" type="file" accept="image/png,image/jpeg" /></label>
@@ -185,7 +185,7 @@
     <div class="card form gpanel" id="gtab-levels">
       <h3>Niveles</h3>
       <label>Canal de anuncios</label>
-      <div class="row"><input class="input" id="lChannel" readonly placeholder="Elige un canal..." style="flex:1" /><button type="button" class="btn-ghost" data-pick="lChannel">Elegir</button></div>
+      <select class="input" id="lChannel" style="width:100%"><option value="">Elige un canal...</option></select>
       <label>Mensaje<textarea class="input" id="lMsg" rows="2" placeholder="!subio al nivel **{nivel}**"></textarea></label>
       <p class="muted">Variables: {usuario} {nivel} {servidor}</p>
       <button class="btn-primary" id="lSave">Guardar niveles</button>
@@ -205,7 +205,7 @@
       <label class="switch-row"><span>Anti-spam</span><button type="button" class="switch" id="secSpam"></button></label>
       <label class="switch-row"><span>Anti-phishing</span><button type="button" class="switch" id="secPhish"></button></label>
       <label>Canal de logs</label>
-      <div class="row"><input class="input" id="secLog" readonly placeholder="Elige un canal..." style="flex:1" /><button type="button" class="btn-ghost" data-pick="secLog">Elegir</button></div>
+      <select class="input" id="secLog" style="width:100%"><option value="">Elige un canal...</option></select>
       <button class="btn-primary" id="secSave">Guardar seguridad</button>
     </div>
     <div class="card form gpanel" id="gtab-tickets">
@@ -213,7 +213,7 @@
       <label>Título del panel<input class="input" id="tkTitle" placeholder="Soporte de {server}" /></label>
       <label>Descripción<textarea class="input" id="tkDesc" rows="3" placeholder="Pulsa el botón para abrir un ticket..."></textarea></label>
       <label>Canal donde se publica el panel</label>
-      <div class="row"><input class="input" id="tkChannel" readonly placeholder="Elige un canal..." style="flex:1" /><button type="button" class="btn-ghost" data-pick="tkChannel">Elegir</button></div>
+      <select class="input" id="tkChannel" style="width:100%"><option value="">Elige un canal...</option></select>
       <label>Roles staff (IDs separados por coma)<input class="input" id="tkRoles" placeholder="123..., 456..." /></label>
       <div class="row">
         <button class="btn-primary" id="tkSave">Guardar tickets</button>
@@ -227,7 +227,7 @@
         <label>Max por work<input class="input" id="ecoMax" type="number" min="1" max="100000" /></label>
       </div>
       <label>Canal economía</label>
-      <div class="row"><input class="input" id="ecoChannel" readonly placeholder="Elige un canal..." style="flex:1" /><button type="button" class="btn-ghost" data-pick="ecoChannel">Elegir</button></div>
+      <select class="input" id="ecoChannel" style="width:100%"><option value="">Elige un canal...</option></select>
       <button class="btn-primary" id="ecoSave">Guardar economía</button>
     </div>
     <div class="card form gpanel" id="gtab-youtube">
@@ -237,7 +237,7 @@
       <label>Nombre canal<input class="input" id="ytName" placeholder="Mi canal" /></label>
       <div class="row2">
         <label>Canal aviso</label>
-        <div class="row"><input class="input" id="ytAnnounce" readonly placeholder="Elige un canal..." style="flex:1" /><button type="button" class="btn-ghost" data-pick="ytAnnounce">Elegir</button></div>
+        <select class="input" id="ytAnnounce" style="width:100%"><option value="">Elige un canal...</option></select>
         <label>Rol a mencionar ID<input class="input" id="ytRole" placeholder="ID rol (opcional)" /></label>
       </div>
       <label>Mensaje<textarea class="input" id="ytMsg" rows="2" placeholder="Nuevo video!"></textarea></label>
@@ -251,30 +251,30 @@
     <div class="card form gpanel" id="gtab-logs">
       <h3>📝 Logs del servidor</h3>
       <label>Canal de logs</label>
-      <div class="row"><input class="input" id="lgChannel" readonly placeholder="Elige un canal..." style="flex:1" /><button type="button" class="btn-ghost" data-pick="lgChannel">Elegir</button></div>
+      <select class="input" id="lgChannel" style="width:100%"><option value="">Elige un canal...</option></select>
       <label>Nivel (0-5)<input class="input" id="lgLevel" type="number" min="0" max="5" /></label>
       <label>Canal de sanciones</label>
-      <div class="row"><input class="input" id="mlChannel" readonly placeholder="Elige un canal..." style="flex:1" /><button type="button" class="btn-ghost" data-pick="mlChannel">Elegir</button></div>
+      <select class="input" id="mlChannel" style="width:100%"><option value="">Elige un canal...</option></select>
       <button class="btn-primary" id="lgSave">Guardar logs</button>
     </div>
     <div class="card form gpanel" id="gtab-counter">
       <h3>🔢 Contador</h3>
       <label>Canal del contador</label>
-      <div class="row"><input class="input" id="ctChannel" readonly placeholder="Elige un canal..." style="flex:1" /><button type="button" class="btn-ghost" data-pick="ctChannel">Elegir</button></div>
+      <select class="input" id="ctChannel" style="width:100%"><option value="">Elige un canal...</option></select>
       <button class="btn-primary" id="ctSave">Guardar contador</button>
     </div>
     <div class="card form gpanel" id="gtab-bump">
       <h3>📌 Bump</h3>
       <label class="switch-row"><span>Recordatorio activo</span><button type="button" class="switch" id="bpActive"></button></label>
       <label>Canal</label>
-      <div class="row"><input class="input" id="bpChannel" readonly placeholder="Elige un canal..." style="flex:1" /><button type="button" class="btn-ghost" data-pick="bpChannel">Elegir</button></div>
+      <select class="input" id="bpChannel" style="width:100%"><option value="">Elige un canal...</option></select>
       <label>Mensaje<textarea class="input" id="bpMsg" rows="2" placeholder="!Es hora de hacer bump!"></textarea></label>
       <button class="btn-primary" id="bpSave">Guardar bump</button>
     </div>
     <div class="card form gpanel" id="gtab-invites">
       <h3>✉️ Invites</h3>
       <label>Canal de registro</label>
-      <div class="row"><input class="input" id="ivChannel" readonly placeholder="Elige un canal..." style="flex:1" /><button type="button" class="btn-ghost" data-pick="ivChannel">Elegir</button></div>
+      <select class="input" id="ivChannel" style="width:100%"><option value="">Elige un canal...</option></select>
       <button class="btn-primary" id="ivSave">Guardar invites</button>
     </div>
     </div>
@@ -313,11 +313,14 @@
 
   <section class="view" id="view-settings">
     <div class="page-head"><div><h2>Ajustes de PoLo</h2><p class="muted">Idioma, enlaces Discord y conexión.</p></div></div>
-    <div class="grid2">
+    <div class="card hidden" id="settingsLocked">
+      <h3>Solo staff</h3>
+      <p class="muted">Esta sección es solo para el staff de PoLo.</p>
+    </div>
+    <div class="grid2 hidden" id="settingsBody">
       <form class="card form" id="settingsForm">
         <h3>General</h3>
         <label>Idioma<select class="input" id="setLang"><option value="es">Espanol</option><option value="en">English</option></select></label>
-        <p class="muted">Prefijo y presencia solo los cambia el Staff en la barra lateral.</p>
         <label class="switch-row"><span>Auto-mod anti-spam</span><button type="button" class="switch on" id="setAutomod"></button></label>
         <label class="switch-row"><span>Logs de auditoria</span><button type="button" class="switch on" id="setAudit"></button></label>
         <button class="btn-primary" type="submit">Guardar cambios</button>
@@ -361,16 +364,9 @@
   </form>
 </div>
 
-<div class="modal-back hidden" id="chanModal">
-  <div class="modal">
-    <div class="card-head"><h3>Elegir canal</h3><button class="btn-ghost" id="chanClose" style="padding:6px 12px">Cerrar</button></div>
-    <div class="feed" id="chanList"></div>
-  </div>
-</div>
-
 <div class="toast" id="toast"></div>
 
-<script src="config.js?v=14"></script>
-<script src="app.js?v=14"></script>
+<script src="config.js?v=16"></script>
+<script src="app.js?v=16"></script>
 </body>
 </html>
