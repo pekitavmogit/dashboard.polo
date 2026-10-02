@@ -6,7 +6,7 @@
 <title>PoLo — Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=16" />
+<link rel="stylesheet" href="style.css?v=17" />
 <link rel="icon" href="logo.png" type="image/png">
 </head>
 <body>
@@ -52,6 +52,7 @@
     <button data-view="servers">Servidores <em id="navServerCount">6</em></button>
     <button data-view="guild">Servidor</button>
     <button data-view="help">Ayuda</button>
+    <button data-view="embed">Embed</button>
     <button data-view="reports">Reportes</button>
     <button data-view="settings" id="navSettings" style="display:none">Ajustes</button>
   </nav>
@@ -119,33 +120,29 @@
   </header>
 
   <section class="view active" id="view-overview">
-    <div class="hero">
-      <div>
-        <p class="eyebrow"><span class="live"></span> PANEL EN VIVO - POLO</p>
-        <h1>Hola de nuevo, <span class="grad" id="heroName">admin de PoLo</span></h1>
-        <p class="muted">Configura PoLo, personaliza sus módulos y mira la actividad de tus servidores.</p>
-        <div class="hero-btns">
-          <button class="btn-ghost" data-goto="servers">Ver servidores</button>
-        </div>
-      </div>
-      <div class="bot-card">
-        <div class="bot-head">
-          <img class="bot-avatar-img" src="logo.png" alt="PoLo" onerror="this.outerHTML='<div class=\'bot-avatar\'>P</div>'" />
-          <div><strong>PoLo</strong><span>#4821 - <span id="heroStatus">En linea</span></span></div>
-          <span class="badge">BOT</span>
-        </div>
-        <div class="bot-stats">
-          <div><strong id="statServers">0</strong><span>servidores</span></div>
-          <div><strong id="statUsers">0</strong><span>usuarios</span></div>
-          <div><strong id="statCmds">0</strong><span>comandos hoy</span></div>
-        </div>
+    <div class="page-head">
+      <div><h2 id="resumenTitle">Resumen</h2><p class="muted" id="resumenSub">Elige un servidor para ver sus datos.</p></div>
+      <div class="row">
+        <span class="pill" id="botState"><i></i> Comprobando...</span>
+        <button class="btn-primary" id="resumenRefresh">Actualizar</button>
       </div>
     </div>
-
-    <div class="grid2">
-      <div class="card">
-        <div class="card-head"><h3>Eventos recientes</h3></div>
-        <div class="feed" id="feed"></div>
+    <div class="card" id="resumenEmpty">
+      <h3>Hola de nuevo, <span id="heroName">admin de PoLo</span></h3>
+      <p class="muted">Selecciona un servidor en "Moderando" o desde la lista para ver su resumen.</p>
+      <div class="row"><button class="btn-primary" data-goto="servers">Ver servidores</button></div>
+    </div>
+    <div id="resumenBody" class="hidden">
+      <div class="stat-grid" id="statGrid"></div>
+      <div class="card hidden" id="missingBox" style="margin-bottom:14px">
+        <div class="card-head"><h3>PoLo aún no está en estos servidores tuyos</h3></div>
+        <div class="feed" id="missingList"></div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-head"><h3>Eventos recientes</h3></div>
+          <div class="feed" id="feed"></div>
+        </div>
       </div>
     </div>
   </section>
@@ -280,6 +277,30 @@
     </div>
   </section>
 
+  <section class="view" id="view-embed">
+    <div class="page-head"><div><h2>Constructor de embeds</h2><p class="muted">Diseña y envía un embed al canal. Se envía una sola vez.</p></div></div>
+    <div class="grid2">
+      <div class="card form">
+        <h3>Diseño</h3>
+        <label>Canal destino</label>
+        <select class="input" id="embChannel" style="width:100%"><option value="">Elige un canal...</option></select>
+        <label>Título<input class="input" id="embTitle" maxlength="256" placeholder="Título del embed" /></label>
+        <label>Descripción<textarea class="input" id="embDesc" rows="4" placeholder="Texto principal..."></textarea></label>
+        <div class="row2">
+          <label>Color<input class="input" id="embColor" value="#5865F2" maxlength="7" /></label>
+          <label>Pie<input class="input" id="embFooter" maxlength="200" placeholder="Texto pequeño abajo" /></label>
+        </div>
+        <label>Imagen grande (URL)<input class="input" id="embImg" placeholder="https://..." /></label>
+        <label>Miniatura (URL)<input class="input" id="embThumb" placeholder="https://..." /></label>
+        <button class="btn-primary" id="embSend">Enviar al canal</button>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Vista previa</h3></div>
+        <div id="embPreview"></div>
+      </div>
+    </div>
+  </section>
+
   <section class="view" id="view-help">
     <div class="page-head">
       <div><h2>Ayuda <span class="count" id="helpCount"></span></h2><p class="muted">Todos los comandos del bot. Filtra por nombre o categoría.</p></div>
@@ -366,7 +387,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="config.js?v=16"></script>
-<script src="app.js?v=16"></script>
+<script src="config.js?v=17"></script>
+<script src="app.js?v=17"></script>
 </body>
 </html>
