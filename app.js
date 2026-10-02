@@ -133,6 +133,8 @@ function doLogout() {
   $('#navSettings').style.display = 'none';
   $('#settingsBody').classList.add('hidden');
   $('#settingsLocked').classList.remove('hidden');
+  $('#resumenEmpty').classList.remove('hidden');
+  $('#resumenBody').classList.add('hidden');
   toast('Sesion cerrada');
 }
 async function handleOAuthCallback() {
@@ -205,17 +207,13 @@ function renderStatus() {
   $('#statusPill').classList.toggle('off', !online);
   $('#statusPill').innerHTML = `<i></i> ${online ? 'En linea' : 'Pausado'}`;
   $('#sideDot').classList.toggle('off', !online);
-  $('#heroStatus').textContent = online ? 'En linea' : 'Pausado';
 }
 function setText(id, val) { $(id).textContent = (val ?? '--').toLocaleString ? val.toLocaleString() : val; }
 function renderHero() {
   const withPolo = S.servers.filter(s => s.hasPolo !== false);
-  const users = withPolo.reduce((a, s) => a + (s.members || 0), 0);
-  $('#statServers').textContent = withPolo.length ? withPolo.length.toLocaleString() : '0';
-  $('#statUsers').textContent = users ? users.toLocaleString() : '0';
-  $('#statCmds').textContent = stats.totalCmds ? stats.totalCmds.toLocaleString() : '0';
   $('#navServerCount').textContent = withPolo.length;
-  $('#serverCountLabel').textContent = `- ${withPolo.length} con PoLo`;
+  const lbl = $('#serverCountLabel');
+  if (lbl) lbl.textContent = `- ${withPolo.length} con PoLo`;
 }
 
 // ---------- TEMA UNICO OSCURO DISCORD ----------
@@ -292,14 +290,115 @@ function renderServers(filter = '') {
 
 let ME = { isOwner: false, isPremium: false, id: null };
 let SELECTED_GUILD = null;
+// ---------- RESUMEN POR SERVIDOR ----------
+function statCard(label, big, sub) {
+  return `<div class="card stat"><span>${label}</span><strong>${big}</strong><small class="muted2">${sub}</small></div>`;
+}
+async function loadBotStatus() {
+  try {
+    const j = await apiGet('/api/bot/status');
+    const pill = $('#botState');
+    pill.classList.toggle('off', !j.online);
+    pill.innerHTML = `<i></i> ${j.online ? 'Bot en línea' : 'Bot apagado'}`;
+  } catch {
+    const pill = $('#botState');
+    pill.classList.add('off');
+    pill.innerHTML = '<i></i> Bot apagado';
+  }
+}
+async function loadSummary() {
+  if (!SELECTED_GUILD) {
+    $('#resumenEmpty').classList.remove('hidden');
+    $('#resumenBody').classList.add('hidden');
+    return;
+  }
+  $('#resumenEmpty').classList.add('hidden');
+  $('#resumenBody').classList.remove('hidden');
+  paintChanSelects().catch(() => {});
+  const s = S.servers.find(x => x.id === SELECTED_GUILD);
+  $('#resumenTitle').textContent = s ? s.name : 'Resumen';
+  $('#resumenSub').textContent = 'Datos en vivo de este servidor.';
+  try {
+    const j = await apiGet('/api/guilds/' + SELECTED_GUILD + '/summary');
+    if (j.name) $('#resumenTitle').textContent = j.name;
+    $('#resumenSub').textContent = `${(j.members || 0).toLocaleString()} miembros · ${(j.channels.text + j.channels.voice)} canales · ID ${SELECTED_GUILD}`;
+    $('#statGrid').innerHTML =
+      statCard('MIEMBROS', (j.members || 0).toLocaleString(), `${j.channels.text} texto · ${j.channels.voice} voz`) +
+      statCard('NIVELES', (j.levels.users || 0).toLocaleString(), `${(j.levels.xp || 0).toLocaleString()} XP total`) +
+      statCard('ECONOMÍA', (j.economy.cash || 0).toLocaleString(), `${(j.economy.users || 0).toLocaleString()} usuarios con monedas`) +
+      statCard('ALERTAS', j.youtube || 0, 'avisos de YouTube') +
+      statCard('SORTEOS', j.giveaways || 0, 'activos ahora') +
+      statCard('REPORTES', j.reports || 0, 'pendientes') +
+      statCard('COMANDOS', j.commands != null ? j.commands : '—', 'slash registrados') +
+      statCard('CANALES', j.channels.text + j.channels.voice, 'en total');
+    const missing = S.servers.filter(x => !x.hasPolo);
+    $('#missingBox').classList.toggle('hidden', !missing.length);
+    $('#missingList').innerHTML = missing.map(m =>
+      `<div class="feed-item"><span><b>${m.name}</b></span><button class="btn-ghost" style="margin-left:auto;padding:6px 12px" onclick="inviteTo('${m.id}')">Invitar bot</button></div>`
+    ).join('');
+  } catch {
+    $('#statGrid').innerHTML = '<p class="muted">No se pudo cargar. Revisa que PoLo siga en el servidor.</p>';
+  }
+}
+$('#resumenRefresh').onclick = async () => { await loadBotStatus().catch(() => {}); await loadSummary().catch(() => {}); toast('Actualizado'); };
+
+// ---------- EMBED BUILDER ----------
+function renderEmbedPreview() {
+  const title = $('#embTitle').value.trim();
+  const desc = $('#embDesc').value.trim() || 'Tu texto aquí...';
+  const color = /^#[0-9a-fA-F]{6}$/.test($('#embColor').value.trim()) ? $('#embColor').value.trim() : '#5865F2';
+  const img = $('#embImg').value.trim();
+  const thumb = $('#embThumb').value.trim();
+  const foot = $('#embFooter').value.trim();
+  $('#embPreview').innerHTML =
+    `<div class="dembed"><div class="dembed-bar" style="background:${color}"></div><div class="dembed-body">` +
+    (thumb ? `<img class="dembed-thumb" src="${thumb}" alt="" onerror="this.remove()" />` : '') +
+    (title ? `<div class="dembed-title">${title.replace(/</g, '&lt;')}</div>` : '') +
+    `<div class="dembed-desc">${desc.replace(/</g, '&lt;').replace(/\n/g, '<br>')}</div>` +
+    (img ? `<img class="dembed-img" src="${img}" alt="" onerror="this.remove()" />` : '') +
+    (foot ? `<div class="dembed-foot">${foot.replace(/</g, '&lt;')}</div>` : '') +
+    `</div></div>`;
+}
+['embTitle', 'embDesc', 'embColor', 'embImg', 'embThumb', 'embFooter'].forEach(id => {
+  document.getElementById(id).addEventListener('input', renderEmbedPreview);
+});
+let embSending = false;
+$('#embSend').onclick = async () => {
+  if (embSending) return;
+  if (!SELECTED_GUILD) { toast('Selecciona un servidor primero'); return; }
+  const channelId = $('#embChannel').value;
+  const description = $('#embDesc').value.trim();
+  if (!channelId) { toast('Elige un canal destino'); return; }
+  if (!description) { toast('Escribe una descripción'); return; }
+  embSending = true;
+  $('#embSend').disabled = true;
+  try {
+    const r = await apiPost('/api/embed', {
+      guildId: SELECTED_GUILD,
+      channelId,
+      title: $('#embTitle').value,
+      description,
+      color: $('#embColor').value,
+      image: $('#embImg').value,
+      thumbnail: $('#embThumb').value,
+      footer: $('#embFooter').value,
+    });
+    toast('Embed enviado #' + (r.id || '').slice(-4));
+  } catch {
+    toast('No se pudo enviar. Revisa canal y permisos');
+  }
+  embSending = false;
+  $('#embSend').disabled = false;
+};
 function selectGuild(id, goto) {
   SELECTED_GUILD = id;
   $('#guildSelect').value = id;
   const s = S.servers.find(x => x.id === id);
   $('#guildTitle').textContent = s ? s.name : 'Servidor';
-  if (!id) { showNoGuild(); }
+  if (!id) { showNoGuild(); loadSummary(); }
   if (id) {
     loadGuildConfig(id);
+    loadSummary();
     if (pendingModule) { const p = pendingModule; pendingModule = null; openModule(p); }
     else openModule(currentModule || 'welcome');
   }
@@ -694,7 +793,7 @@ $('#openInviteTop').onclick = () => openLink(getInviteUrl(), 'Configura tu Clien
 $('#supportBtn').onclick = () => openLink(S.supportServer || CFG.supportServer, 'Configura tu servidor de soporte en Ajustes');
 $('#docsBtn').onclick = () => window.open('docs.html', '_blank');
 // ---------- DESPLEGABLES DE CANALES ----------
-const CHAN_SELECTS = ['wChannel', 'lChannel', 'tkChannel', 'ecoChannel', 'lgChannel', 'mlChannel', 'ivChannel', 'ctChannel', 'bpChannel', 'secLog', 'ytAnnounce'];
+const CHAN_SELECTS = ['wChannel', 'lChannel', 'tkChannel', 'ecoChannel', 'lgChannel', 'mlChannel', 'ivChannel', 'ctChannel', 'bpChannel', 'secLog', 'ytAnnounce', 'embChannel'];
 let chanCache = {};
 async function getChannels() {
   if (!SELECTED_GUILD) return [];
@@ -793,11 +892,14 @@ async function loadRealData() {
   await refreshMe().catch(() => {});
   await loadStats();
   await loadGuilds();
+  await loadBotStatus().catch(() => {});
+  await loadSummary().catch(() => {});
   await loadActivity();
   await loadReports();
   await loadHelp().catch(() => {});
 }
 setInterval(() => { if (apiBase() && getSession()) loadStats().catch(() => {}); }, 15000);
+setInterval(() => { if (apiBase() && getSession()) loadBotStatus().catch(() => {}); }, 60000);
 
 // ---------- MISC ----------
 
@@ -810,4 +912,6 @@ renderReports([]);
 loadSettings();
 renderUser();
 refreshMe();
+renderEmbedPreview();
+loadSummary();
 handleOAuthCallback().then(() => { if (apiBase() && getSession()) loadRealData().catch(() => {}); });
