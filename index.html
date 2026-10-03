@@ -6,7 +6,7 @@
 <title>PoLo — Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=17" />
+<link rel="stylesheet" href="style.css?v=18" />
 <link rel="icon" href="logo.png" type="image/png">
 </head>
 <body>
@@ -161,7 +161,7 @@
 
   <section class="view" id="view-guild">
     <div class="page-head">
-      <div><h2 id="guildTitle">Servidor</h2><p class="muted">Elige un servidor en la barra lateral para personalizar PoLo.</p></div>
+      <div><h2 id="guildTitle">Servidor</h2><p class="muted" id="guildSub">Elige un servidor en la barra lateral para personalizar PoLo.</p></div>
     </div>
     <div id="noGuildBox" class="card">
       <h3>Elige un servidor</h3>
@@ -214,7 +214,7 @@
       <label>Roles staff (IDs separados por coma)<input class="input" id="tkRoles" placeholder="123..., 456..." /></label>
       <div class="row">
         <button class="btn-primary" id="tkSave">Guardar tickets</button>
-        <button class="btn-discord" id="tkSend">Publicar panel</button>
+        <button class="btn-primary" id="tkSend">Publicar panel</button>
       </div>
     </div>
     <div class="card form gpanel" id="gtab-economy">
@@ -387,7 +387,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="config.js?v=17"></script>
-<script src="app.js?v=17"></script>
+<script src="config.js?v=18"></script>
+<script src="app.js?v=18"></script>
 </body>
 </html>
