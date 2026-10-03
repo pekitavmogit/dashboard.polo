@@ -428,10 +428,27 @@ async function refreshMe() {
 // ---------- MODULOS: hub estilo Koya + detalle ----------
 let currentModule = null;
 let pendingModule = null;
+const MODULES = {
+  welcome: ['Bienvenidas', 'Mensaje, canal e imagen de bienvenida.'],
+  levels: ['Niveles', 'Anuncios de subida de nivel y recompensas XP.'],
+  ai: ['IA de PoLo', 'Rol personalizado del bot (premium).'],
+  security: ['Seguridad', 'Anti-raid, anti-links y anti-spam.'],
+  tickets: ['Tickets', 'Panel de soporte del servidor.'],
+  economy: ['Economía', 'Work, tienda y canal de economía.'],
+  youtube: ['Alertas', 'Avisos de videos de YouTube.'],
+  roles: ['Roles', 'Roles automáticos al entrar.'],
+  logs: ['Logs', 'Canal de logs y sanciones.'],
+  counter: ['Contador', 'Juego del contador.'],
+  bump: ['Bump', 'Recordatorio de bump.'],
+  invites: ['Invites', 'Registro de invitaciones.'],
+};
 function openModule(name) {
   const panel = $('#gtab-' + name);
   if (!panel) return;
   currentModule = name;
+  const meta = MODULES[name] || ['Servidor', ''];
+  $('#guildTitle').textContent = meta[0];
+  $('#guildSub').textContent = meta[1];
   $('#noGuildBox').classList.add('hidden');
   $$('#guildPanelsHost .gpanel').forEach(p => p.classList.remove('active'));
   panel.classList.add('active');
@@ -439,6 +456,8 @@ function openModule(name) {
 }
 function showNoGuild() {
   currentModule = null;
+  $('#guildTitle').textContent = 'Servidor';
+  $('#guildSub').textContent = 'Elige un servidor en la barra lateral para personalizar PoLo.';
   $$('#guildPanelsHost .gpanel').forEach(p => p.classList.remove('active'));
   $('#noGuildBox').classList.remove('hidden');
   $$('#sideMods button').forEach(b => b.classList.remove('on'));
